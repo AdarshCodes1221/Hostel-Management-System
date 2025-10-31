@@ -112,18 +112,27 @@ exports.getRoom = async (req, res) => {
 };
 
 // @desc    Create new room
-// @route   POST /api/hostels/:hostelId/rooms
+// @route   POST /api/rooms (body.hostel) or POST /api/hostels/:hostelId/rooms
 // @access  Private/Admin
 exports.createRoom = async (req, res) => {
   try {
-    req.body.hostel = req.params.hostelId;
-    
-    const hostel = await Hostel.findById(req.params.hostelId);
+    const hostelId = req.params.hostelId || req.body.hostel;
+
+    if (!hostelId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Hostel id is required to create a room'
+      });
+    }
+
+    req.body.hostel = hostelId;
+
+    const hostel = await Hostel.findById(hostelId);
     
     if (!hostel) {
       return res.status(404).json({
         success: false,
-        message: `No hostel with the id of ${req.params.hostelId}`
+        message: `No hostel with the id of ${hostelId}`
       });
     }
     

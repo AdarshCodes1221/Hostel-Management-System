@@ -16,6 +16,6 @@ router.get('/', getBookings);
 router.get('/:id', getBooking);
 router.post('/', createBooking);
 router.put('/:id', updateBooking);
-router.delete('/:id', cancelBooking);
+router.put('/:id/cancel', cancelBooking);
 
 module.exports = router;

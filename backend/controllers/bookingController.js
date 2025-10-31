@@ -20,7 +20,7 @@ exports.getBookings = async (req, res) => {
     } else {
       query = Booking.find().populate({
         path: 'user',
-        select: 'name email'
+        select: 'firstName lastName email prn'
       }).populate({
         path: 'room',
         select: 'roomNumber type price'
@@ -116,7 +116,16 @@ exports.createBooking = async (req, res) => {
     // Calculate total price
     const checkInDate = new Date(req.body.checkInDate);
     const checkOutDate = new Date(req.body.checkOutDate);
-    const days = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+
+    if (Number.isNaN(checkInDate.getTime()) || Number.isNaN(checkOutDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid booking dates provided'
+      });
+    }
+
+    const millisecondsPerDay = 1000 * 60 * 60 * 24;
+    const days = Math.ceil((checkOutDate - checkInDate) / millisecondsPerDay);
     
     if (days <= 0) {
       return res.status(400).json({
@@ -126,6 +135,7 @@ exports.createBooking = async (req, res) => {
     }
     
     req.body.totalPrice = days * room.price;
+    req.body.hostel = room.hostel;
     
     // Create booking
     const booking = await Booking.create(req.body);

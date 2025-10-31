@@ -44,7 +44,7 @@ exports.getDashboardStats = async (req, res) => {
       .limit(5)
       .populate({
         path: 'user',
-        select: 'name email'
+        select: 'firstName lastName email prn'
       })
       .populate({
         path: 'room',
@@ -94,10 +94,10 @@ exports.updateUserRole = async (req, res) => {
   try {
     const { role } = req.body;
     
-    if (!role || !['user', 'admin'].includes(role)) {
+    if (!role || !['student', 'admin'].includes(role)) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide a valid role (user or admin)'
+        message: 'Please provide a valid role (student or admin)'
       });
     }
     

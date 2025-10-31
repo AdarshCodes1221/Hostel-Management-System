@@ -17,6 +17,7 @@ router.get('/:id', getRoom);
 
 // Protected routes (admin only)
 router.post('/', protect, authorize('admin'), createRoom);
+router.post('/:hostelId', protect, authorize('admin'), createRoom);
 router.put('/:id', protect, authorize('admin'), updateRoom);
 router.delete('/:id', protect, authorize('admin'), deleteRoom);
 

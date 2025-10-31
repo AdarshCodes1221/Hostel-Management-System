@@ -1,11 +1,15 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 
 // Generate JWT Token
 const generateToken = (id) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is not configured');
+  }
+
+  const expiresIn = process.env.JWT_EXPIRE || '30d';
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '30d',
+    expiresIn,
   });
 };
 
@@ -28,18 +32,14 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ success: false, message: 'PRN already registered' });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
     // Create user
     const user = await User.create({
       firstName,
       lastName,
       email,
-      password: hashedPassword,
+      password,
       prn,
-      role: role || 'student',
+      role: role === 'admin' ? 'admin' : 'student',
     });
 
     if (user) {
@@ -66,12 +66,24 @@ const registerUser = async (req, res) => {
 // @access  Public
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    // Allow login by either email or PRN for students/admins
+    const { email, prn, password } = req.body;
 
-    // Check for user email
-    const user = await User.findOne({ email });
+    if (!password || (!email && !prn)) {
+      return res.status(400).json({ success: false, message: 'Provide email or PRN and password' });
+    }
 
-    if (user && (await bcrypt.compare(password, user.password))) {
+    // Try to find by email first, otherwise by PRN
+    let user = null;
+    if (email) {
+      user = await User.findOne({ email }).select('+password');
+    }
+
+    if (!user && prn) {
+      user = await User.findOne({ prn }).select('+password');
+    }
+
+    if (user && (await user.matchPassword(password))) {
       res.json({
         success: true,
         data: {
@@ -109,16 +121,16 @@ const getUserProfile = async (req, res) => {
 // @access  Private
 const updateUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).select('+password');
 
     if (user) {
       user.firstName = req.body.firstName || user.firstName;
       user.lastName = req.body.lastName || user.lastName;
       user.email = req.body.email || user.email;
+      user.prn = req.body.prn || user.prn;
 
       if (req.body.password) {
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(req.body.password, salt);
+        user.password = req.body.password;
       }
 
       const updatedUser = await user.save();

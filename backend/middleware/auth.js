@@ -23,9 +23,24 @@ exports.protect = async (req, res, next) => {
 
   try {
     // Verify token
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error: JWT_SECRET not set'
+      });
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     req.user = await User.findById(decoded.id);
+
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'The user associated with this token no longer exists'
+      });
+    }
+
     next();
   } catch (err) {
     return res.status(401).json({

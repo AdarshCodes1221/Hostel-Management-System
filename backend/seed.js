@@ -1,7 +1,6 @@
 // seed.js
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const bcrypt = require('bcryptjs');
 
 // Load environment variables
 dotenv.config();
@@ -27,14 +26,13 @@ async function seed() {
     await Hostel.deleteMany();
     await Room.deleteMany();
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash('Admin123!', 10);
-
     // Create admin user
     const admin = await User.create({
-      name: 'Admin User',
+      firstName: 'Admin',
+      lastName: 'User',
       email: 'admin@siu.edu.in',
-      password: hashedPassword,
+      password: 'Admin123!',
+      prn: 'ADMIN001',
       role: 'admin',
     });
 
@@ -92,6 +90,9 @@ async function seed() {
             floor: floor,
             roomNumber: `${floor}0${roomNum}`,
             capacity: 2,
+            type: roomNum === 1 ? 'Single' : roomNum <= 3 ? 'Double' : 'Triple',
+            price: roomNum === 1 ? 5000 : roomNum <= 3 ? 4500 : 4000,
+            amenities: ['WiFi', '24/7 Security', 'Housekeeping']
           });
         }
       }

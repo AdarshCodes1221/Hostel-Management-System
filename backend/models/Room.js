@@ -11,6 +11,10 @@ const RoomSchema = new mongoose.Schema({
     required: [true, 'Please add a room number'],
     trim: true
   },
+  floor: {
+    type: Number,
+    min: 0
+  },
   type: {
     type: String,
     required: [true, 'Please add a room type'],
@@ -18,11 +22,13 @@ const RoomSchema = new mongoose.Schema({
   },
   capacity: {
     type: Number,
-    required: [true, 'Please add room capacity']
+    required: [true, 'Please add room capacity'],
+    min: 1
   },
   price: {
     type: Number,
-    required: [true, 'Please add room price']
+    required: [true, 'Please add room price'],
+    min: 0
   },
   amenities: {
     type: [String],
@@ -36,6 +42,10 @@ const RoomSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
 });
+
+RoomSchema.index({ hostel: 1, roomNumber: 1 }, { unique: true });
 
 module.exports = mongoose.model('Room', RoomSchema);

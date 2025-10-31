@@ -13,6 +13,14 @@ const HostelSchema = new mongoose.Schema({
     required: [true, 'Please add a description'],
     maxlength: [500, 'Description cannot be more than 500 characters']
   },
+  location: {
+    type: String,
+    trim: true
+  },
+  floors: {
+    type: Number,
+    min: 1
+  },
   address: {
     type: String,
     required: [true, 'Please add an address']
@@ -49,6 +57,8 @@ const HostelSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
 });
 
 module.exports = mongoose.model('Hostel', HostelSchema);
